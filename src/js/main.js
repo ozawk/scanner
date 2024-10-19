@@ -259,34 +259,34 @@ async function takeImageConfirmAndEnd(
     // window.location.reload();
 }
 
-// function uploadFile(pdfData) {
-//     const formData = new FormData();
-//     formData.append(
-//         "file",
-//         new Blob([pdfData], {
-//             type: "application/pdf",
-//         }),
-//         fileId + ".pdf",
-//     );
-//     const xhr = new XMLHttpRequest();
-//     xhr.open("POST", pdfSaverUrl + fileId, true);
-//     xhr.upload.addEventListener("progress", (event) => {
-//         if (event.lengthComputable) {
-//             console.log(event.loaded, event.total);
-//         }
-//     });
-//     xhr.onload = function () {
-//         if (xhr.status === 200) {
-//             console.log(xhr.responseText);
-//         } else {
-//             console.error(xhr.statusText);
-//         }
-//     };
-//     xhr.onerror = function () {
-//         console.error(xhr.statusText);
-//     };
-//     xhr.send(formData);
-// }
+function uploadFile(pdfData) {
+    const formData = new FormData();
+    formData.append(
+        "file",
+        new Blob([pdfData], {
+            type: "application/pdf",
+        }),
+        fileId + ".pdf",
+    );
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", pdfSaverUrl + fileId, true);
+    xhr.upload.addEventListener("progress", (event) => {
+        if (event.lengthComputable) {
+            console.log(event.loaded, event.total);
+        }
+    });
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            console.log(xhr.responseText);
+        } else {
+            console.error(xhr.statusText);
+        }
+    };
+    xhr.onerror = function () {
+        console.error(xhr.statusText);
+    };
+    xhr.send(formData);
+}
 
 export {
     streamVideo,
