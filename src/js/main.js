@@ -1,6 +1,13 @@
 import { PDFDocument } from "pdf-lib";
 import QRCode from "qrcode";
-//PDFビューア
+import {
+    isEnableGrayScaleImage,
+    isEnableOriginalImage,
+    isEnableInsertHeader,
+    headerText,
+} from "../App.tsx";
+
+//クラウド
 const pdfViewerUrl = "viewer.scan.ozwk.net/";
 const pdfSaverUrl = "https://viewer.scan.ozwk.net/save/";
 let fileId = "";
@@ -8,14 +15,14 @@ let fileIdLength = 8;
 const fileIdChars = "23456789abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"; //除外:01iloIO
 let qrCodeText;
 
-// 出力に関係ない画像の設定
+//画像
 const videoRequiredIdealWidth = 1920;
 const videoRequiredIdealHeight = 1080;
 const OutputVideoImageWidth = 1920;
 const OutputVideoImageHeight = 1080;
 let isimgPrevVideoElemStreaming = false;
-let isEnableConvertImageGrayscale = true;
 let convertImageGrayscaleIncreaseBrightness = 60;
+let FinalOutputImages = [];
 
 // 画像処理用Canvas
 let imgPrevVideoElem;
@@ -24,23 +31,10 @@ ImageProcessCanvas.width = OutputVideoImageWidth;
 ImageProcessCanvas.height = OutputVideoImageHeight;
 let ImageProcessCanvasContext = ImageProcessCanvas.getContext("2d");
 
-let FinalOutputImages = [];
-let pdfDataUri;
-
 // 画像ヘッダ
-let isEnableInsertImageHeader = true;
 const ImageHeaderHeight = 60;
-let ImageHeaderTitle = "            ";
-let ImageHeaderPageTitle = "P,71";
 let ImageHeaderPageCount = 71;
-// const ImageHeaderFontData = new FontFace(
-//     "KosugiMaru",
-//     "url('./KosugiMaru-Regular.ttf')",
-// );
-// let ImageHeaderTextFont;
-// ImageHeaderFontData.load().then((font) => {
-//     ImageHeaderTextFont = font;
-// });
+
 createFileData();
 
 async function getCameraData() {
@@ -99,6 +93,7 @@ function streamVideo(deviceId) {
 }
 
 function confirmStreamVideo() {
+    console.log(isEnableInsertHeader);
     ImageProcessCanvasContext.drawImage(
         imgPrevVideoElem,
         0,
@@ -107,10 +102,10 @@ function confirmStreamVideo() {
         OutputVideoImageHeight,
     );
 
-    if (isEnableConvertImageGrayscale) {
+    if (isEnableGrayScaleImage) {
         convertImageGrayscale();
     }
-    if (isEnableInsertImageHeader) {
+    if (isEnableInsertHeader) {
         insertImageHeader();
     }
     const dataURL = ImageProcessCanvas.toDataURL("image/jpeg");
@@ -132,11 +127,10 @@ function insertImageHeader() {
     ImageProcessCanvasContext.fillStyle = "black";
     ImageProcessCanvasContext.font = "40px sans-serif";
     ImageProcessCanvasContext.fillText(
-        ImageHeaderTitle + "P." + ImageHeaderPageCount,
+        headerText + "     P." + ImageHeaderPageCount,
         20,
         ImageHeaderHeight * 0.7,
     );
-    ImageHeaderPageCount = ImageHeaderPageCount + 2;
 
     ImageProcessCanvasContext.beginPath();
     ImageProcessCanvasContext.moveTo(
@@ -151,13 +145,14 @@ function insertImageHeader() {
 
     ImageProcessCanvasContext.font = "20px sans-serif";
     ImageProcessCanvasContext.fillText(
-        qrCodeText,
+        "                                                                      " +
+            qrCodeText,
         OutputVideoImageWidth - 800 - ImageHeaderHeight * 2,
         ImageHeaderHeight / 2 - 5,
     );
     ImageProcessCanvasContext.font = "20px sans-serif";
     let dataText;
-    if (isEnableConvertImageGrayscale) {
+    if (isEnableGrayScaleImage) {
         dataText = "グレースケール";
     } else {
         dataText = "Rawデータ";

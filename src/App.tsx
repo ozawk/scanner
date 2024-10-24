@@ -1,4 +1,6 @@
 import React, { useState, useEffect, SetStateAction } from "react";
+import { Turnstile } from "@marsidev/react-turnstile";
+import type { TurnstileInstance } from "@marsidev/react-turnstile";
 import {
     InputNumber,
     Radio,
@@ -36,14 +38,18 @@ import { CheckboxChangeEvent } from "antd/es/checkbox";
 
 const { Header, Content } = Layout;
 const font = "IBM Plex Sans JP";
-let config = 1;
 let firstGetCameraDataReroadButtonCont = 0;
 let nowUseCameraId: string;
+let isEnableGrayScaleImage = true;
+let isEnableOriginalImage = false;
+let isEnableInsertHeader = true;
+let headerText = "scannedPDF";
 let isDownloadPdf = true,
     isUploadCloud = true,
     downloadPdfFileName = "タイトル";
 
 const App: React.FC = () => {
+    const ref = React.useRef<TurnstileInstance | null>(null);
     const [valuePrevVideoWidth, setValuePrevVideoWidth] = useState(920);
     const [valuePrevVideoHeight, setValuePrevVideoHeight] = useState(531);
     // function setTrueSize() {
@@ -101,12 +107,31 @@ const App: React.FC = () => {
                 break;
         }
     };
+    const isChangeHowToProcessImage = (e: string) => {
+        switch (e) {
+            case "a":
+                isEnableGrayScaleImage = true;
+                isEnableOriginalImage = false;
+                break;
+            case "d":
+                isEnableGrayScaleImage = false;
+                isEnableOriginalImage = true;
+                break;
+        }
+    };
+    const isChangeHeaderTitleText = (
+        e: React.ChangeEvent<HTMLInputElement>,
+    ) => {
+        headerText = e.target.value;
+    };
     const [isDisabledHeaderTitleText, setIsDisabledHeaderTitleText] =
         useState(false);
     const chkCfgItemIsAddHeaderCheck = (e: CheckboxChangeEvent) => {
         if (!e.target.checked) {
+            isEnableInsertHeader = false;
             setIsDisabledHeaderTitleText(true);
         } else {
+            isEnableInsertHeader = true;
             setIsDisabledHeaderTitleText(false);
         }
     };
@@ -467,6 +492,7 @@ const App: React.FC = () => {
                                         defaultValue="a"
                                         size="small"
                                         style={{ width: 200 }}
+                                        onChange={isChangeHowToProcessImage}
                                         options={[
                                             {
                                                 value: "a",
@@ -499,9 +525,11 @@ const App: React.FC = () => {
                                     タイトル:&emsp;
                                     <Space.Compact>
                                         <Input
+                                            defaultValue={"scannedPDF"}
                                             placeholder="サクシード数2B-AB"
                                             size="small"
                                             disabled={isDisabledHeaderTitleText}
+                                            onChange={isChangeHeaderTitleText}
                                         />
                                     </Space.Compact>
                                 </div>
@@ -536,7 +564,7 @@ const App: React.FC = () => {
                                 <div style={{ fontFamily: font }}>
                                     ファイル名:&emsp;&emsp;
                                     <Input
-                                        defaultValue="タイトル"
+                                        defaultValue="scanned"
                                         addonAfter=".pdf"
                                         style={{ width: 200 }}
                                         size="small"
@@ -589,21 +617,32 @@ const App: React.FC = () => {
                                     />
                                 </div>
                                 <Divider orientation="left">
-                                    クラウドアカウント
+                                    クラウド設定
                                 </Divider>
-                                <Button
-                                    icon={<GoogleOutlined />}
-                                    iconPosition="start"
-                                    color="primary"
-                                    variant="outlined"
-                                    size="small"
-                                    onClick={signInWithGoogle}
-                                >
-                                    Sign in with Google
-                                </Button>
-                                <br />
-                                <br />
-                                <div>
+                                <Turnstile
+                                    siteKey="1x00000000000000000000AA"
+                                    options={{
+                                        theme: "light",
+                                        size: "flexible",
+                                        language: "ja",
+                                    }}
+                                    ref={ref}
+                                    onExpire={() => ref.current?.reset()}
+                                />
+                                <div hidden>
+                                    <Button
+                                        icon={<GoogleOutlined />}
+                                        iconPosition="start"
+                                        color="primary"
+                                        variant="outlined"
+                                        size="small"
+                                        onClick={signInWithGoogle}
+                                        hidden
+                                    >
+                                        Sign in with Google
+                                    </Button>
+                                    <br />
+                                    <br />
                                     <Segmented<string>
                                         options={["Sign up", "Sign in"]}
                                         onChange={chkCfgItemSignUpOrInChoice}
@@ -660,5 +699,10 @@ const App: React.FC = () => {
     );
 };
 
-export { config };
+export {
+    isEnableGrayScaleImage,
+    isEnableOriginalImage,
+    isEnableInsertHeader,
+    headerText,
+};
 export default App;

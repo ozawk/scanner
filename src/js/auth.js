@@ -1,6 +1,5 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { config } from "../App";
 
 import {
     getIdToken,
@@ -47,7 +46,6 @@ async function genJwtCode() {
     const user = auth.currentUser;
     const idToken = await getIdToken(user, true);
     console.log(idToken);
-    console.log(config);
 }
 
 export { signInWithGoogle, genJwtCode };
