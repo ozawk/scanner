@@ -224,6 +224,9 @@ const App: React.FC = () => {
     const chkCfgItemSignUpOrInChoice = (e: string) => {
         setCfgItemEnterSignUpOrInButton(e);
     };
+    const isScuessTurnstile = (e: string) => {
+        console.log(e);
+    };
 
     return (
         <Layout style={{ height: "100vh" }}>
@@ -626,6 +629,7 @@ const App: React.FC = () => {
                                         size: "flexible",
                                         language: "ja",
                                     }}
+                                    onSuccess={isScuessTurnstile}
                                     ref={ref}
                                     onExpire={() => ref.current?.reset()}
                                 />
