@@ -31,22 +31,36 @@ import {
     confirmStreamVideo,
     takeImageConfirmAndEnd,
     getCameraData,
+    deleteOnePageImage,
 } from "./js/main";
 
 import { signInWithGoogle, genJwtCode } from "./js/auth";
 import { CheckboxChangeEvent } from "antd/es/checkbox";
+import { isVisible } from "@testing-library/user-event/dist/utils";
 
 const { Header, Content } = Layout;
 const font = "IBM Plex Sans JP";
 let firstGetCameraDataReroadButtonCont = 0;
 let nowUseCameraId: string;
-let isEnableGrayScaleImage = true;
-let isEnableOriginalImage = false;
-let isEnableInsertHeader = true;
+let isEnableGrayScaleImage = true,
+    isEnableOriginalImage = false,
+    isEnableInsertHeader = true;
+
+let isEnabledInOrderPageNum = true,
+    isEnableddFirstOddPageNum = false,
+    isEnabledNonePageNum = false,
+    firstPageNum = 1,
+    increasePageNum = 1,
+    firstOddPageNum = 1,
+    lastOddPageNum = 3;
+
+let isNowModeManual = true;
+let turnstileToken = "";
+
 let headerText = "scannedPDF";
 let isDownloadPdf = true,
     isUploadCloud = true,
-    downloadPdfFileName = "タイトル";
+    downloadPdfFileName = "scanned";
 
 const App: React.FC = () => {
     const ref = React.useRef<TurnstileInstance | null>(null);
@@ -73,6 +87,64 @@ const App: React.FC = () => {
     // }, []);
     // setTrueSize();
 
+    const [isHiddenAutoModeButtons, setIsHiddenAutoModeButtons] =
+        useState("none");
+    const [isHiddenManualModeButtons, setIsHiddenManualModeButtons] =
+        useState("none");
+    const [isHiddenStartStreamButton, setIsHiddenStartStreamButton] =
+        useState("flex");
+    const isClickStartStreamButton = () => {
+        streamVideo(nowUseCameraId);
+        setProgressBarValue(100);
+        setIsHiddenAutoModeButtons("none");
+        setIsHiddenManualModeButtons("flex");
+        setIsHiddenStartStreamButton("none");
+    };
+    const [isVisiblePrevVideoHidden, setIsVisiblePrevVideoHidden] =
+        useState("hidden");
+    const [progressBarValue, setProgressBarValue] = useState(100);
+    const [progressBarText, setProgressBarText] = useState("手動モード");
+    const isClickChangeModeButton = () => {
+        if (isNowModeManual) {
+            setProgressBarText("手動モード");
+            setIsHiddenAutoModeButtons("none");
+            setIsHiddenManualModeButtons("flex");
+            setIsHiddenStartStreamButton("none");
+        } else {
+            setProgressBarText("自動モード");
+            setIsHiddenAutoModeButtons("flex");
+            setIsHiddenManualModeButtons("none");
+            setIsHiddenStartStreamButton("none");
+        }
+        isNowModeManual = !isNowModeManual;
+    };
+    const isClickIsEnabledFirstOddPageNum = () => {
+        isEnableddFirstOddPageNum = true;
+        isEnabledInOrderPageNum = false;
+        isEnabledNonePageNum = false;
+    };
+    const isClickIsEnabledInOrderPageNum = () => {
+        isEnableddFirstOddPageNum = false;
+        isEnabledInOrderPageNum = true;
+        isEnabledNonePageNum = false;
+    };
+    const isClickIsEnabledNonePageNum = () => {
+        isEnableddFirstOddPageNum = false;
+        isEnabledInOrderPageNum = false;
+        isEnabledNonePageNum = true;
+    };
+    const isClickFirsPageNum = (e: any) => {
+        firstPageNum = e;
+    };
+    const isClickIncreasePageNum = (e: any) => {
+        increasePageNum = e;
+    };
+    const isClickFirstOddPageNum = (e: any) => {
+        firstOddPageNum = e;
+    };
+    const isClickLastOddPageNum = (e: any) => {
+        lastOddPageNum = e;
+    };
     const [
         valueChkCfgItemPageNumImgShotRadio,
         setValueChkCfgItemPageNumImgShotRadio,
@@ -226,6 +298,7 @@ const App: React.FC = () => {
     };
     const isScuessTurnstile = (e: string) => {
         console.log(e);
+        turnstileToken = e;
     };
 
     return (
@@ -287,11 +360,26 @@ const App: React.FC = () => {
                                             width: valuePrevVideoWidth,
                                             height: valuePrevVideoHeight,
                                             borderRadius: "1em",
+                                            position: "absolute",
                                         }}
                                     >
                                         ビデオストリームが利用できません.
                                     </video>
-                                    <img id="imgConfirmed"></img>
+                                    <div
+                                        style={{
+                                            visibility:
+                                                isVisiblePrevVideoHidden as
+                                                    | "visible"
+                                                    | "hidden"
+                                                    | "collapse"
+                                                    | undefined,
+                                            width: valuePrevVideoWidth - 30,
+                                            height: valuePrevVideoHeight - 30,
+                                            background: "#ffffff",
+                                            position: "absolute",
+                                        }}
+                                    ></div>
+                                    <img hidden id="imgConfirmed"></img>
                                 </div>
                             </Splitter.Panel>
                             <Splitter.Panel style={{ padding: "2%" }}>
@@ -304,14 +392,30 @@ const App: React.FC = () => {
                                         padding: "2%",
                                     }}
                                 >
-                                    <div hidden>
+                                    <div
+                                        style={{
+                                            display: isHiddenManualModeButtons,
+                                            justifyContent: "space-evenly",
+                                        }}
+                                    >
                                         <Button
                                             color="primary"
                                             variant="filled"
                                             size="large"
                                             style={{ width: 597 }}
+                                            onClick={() => {
+                                                confirmStreamVideo();
+                                                setIsVisiblePrevVideoHidden(
+                                                    "visible",
+                                                );
+                                                setTimeout(function () {
+                                                    setIsVisiblePrevVideoHidden(
+                                                        "hidden",
+                                                    );
+                                                }, 100);
+                                            }}
                                         >
-                                            次へ [X]
+                                            撮影 [X]
                                         </Button>
                                         &emsp;&emsp;
                                         <Button
@@ -319,25 +423,31 @@ const App: React.FC = () => {
                                             variant="filled"
                                             size="large"
                                             style={{ width: 597 }}
+                                            onClick={deleteOnePageImage}
                                         >
                                             前回のフレームを削除 [C]
                                         </Button>
                                     </div>
-                                    <div hidden>
+                                    <div
+                                        style={{
+                                            display: isHiddenAutoModeButtons,
+                                            justifyContent: "space-evenly",
+                                        }}
+                                    >
                                         <InputNumber
                                             min={1}
                                             max={10}
                                             defaultValue={3}
                                             addonAfter="秒ごとに撮影"
                                             size="large"
-                                            style={{ width: 391 }}
+                                            style={{ width: 380 }}
                                         />
                                         &emsp;&emsp;
                                         <Button
                                             color="danger"
                                             variant="filled"
                                             size="large"
-                                            style={{ width: 391 }}
+                                            style={{ width: 380 }}
                                         >
                                             一時停止 [X]
                                         </Button>
@@ -346,34 +456,36 @@ const App: React.FC = () => {
                                             color="danger"
                                             variant="filled"
                                             size="large"
-                                            style={{ width: 391 }}
+                                            style={{ width: 380 }}
                                         >
                                             前回のフレームを削除 [C]
                                         </Button>
                                     </div>
-                                    <div>
+                                    <div
+                                        style={{
+                                            display: isHiddenStartStreamButton,
+                                            justifyContent: "center",
+                                        }}
+                                    >
                                         <Button
                                             color="primary"
                                             variant="solid"
                                             size="large"
                                             block
-                                            onClick={() =>
-                                                streamVideo(nowUseCameraId)
-                                            }
+                                            onClick={isClickStartStreamButton}
                                         >
                                             ストリームを開始 [Enter]
                                         </Button>
                                     </div>
                                     <br />
-                                    <br />
                                     <Progress
-                                        percent={70}
+                                        percent={progressBarValue}
                                         percentPosition={{
                                             align: "center",
                                             type: "inner",
                                         }}
                                         size={[1232, 20]}
-                                        format={() => "1.23 秒"}
+                                        format={() => progressBarText}
                                     />
                                     <br />
                                     <br />
@@ -381,11 +493,10 @@ const App: React.FC = () => {
                                         color="primary"
                                         variant="outlined"
                                         size="large"
-                                        onClick={confirmStreamVideo}
+                                        onClick={isClickChangeModeButton}
                                         block
                                     >
-                                        撮影モード変更 (現在:自動 変更後:手動)
-                                        [Ctrl]
+                                        撮影モード変更 [Ctrl]
                                     </Button>
                                     <br />
                                     <br />
@@ -436,18 +547,37 @@ const App: React.FC = () => {
                                     onChange={chkCfgItemPageNumImgShotRadio}
                                     value={valueChkCfgItemPageNumImgShotRadio}
                                 >
-                                    <Radio value={1}>
+                                    <Radio
+                                        value={1}
+                                        onClick={isClickIsEnabledInOrderPageNum}
+                                    >
                                         ページ順そのままに撮影する
                                     </Radio>
-                                    <Radio value={2}>
+                                    <br />
+                                    <Radio
+                                        value={2}
+                                        onClick={
+                                            isClickIsEnabledFirstOddPageNum
+                                        }
+                                    >
                                         奇数ページ撮影後偶数ページを撮影する
                                     </Radio>
-                                    <Radio value={3}>ページを設定しない</Radio>
+                                    <br />
+                                    <Radio
+                                        value={3}
+                                        onClick={isClickIsEnabledNonePageNum}
+                                    >
+                                        ページを設定しない
+                                    </Radio>
+                                    <br />
+                                    <br />
                                 </Radio.Group>
 
                                 <div style={{ fontFamily: font }}>
                                     最初のページ:&emsp;
                                     <InputNumber
+                                        onChange={isClickFirsPageNum}
+                                        defaultValue={1}
                                         addonBefore="Page"
                                         style={{ width: 130 }}
                                         size="small"
@@ -457,6 +587,7 @@ const App: React.FC = () => {
                                 <div style={{ fontFamily: font }}>
                                     増分するページ:&emsp;
                                     <InputNumber
+                                        onChange={isClickIncreasePageNum}
                                         addonBefore={
                                             <Select defaultValue="a">
                                                 <Select value="a">+</Select>
@@ -473,6 +604,8 @@ const App: React.FC = () => {
                                 <div style={{ fontFamily: font }}>
                                     奇数最初のページ:&emsp;
                                     <InputNumber
+                                        onChange={isClickFirstOddPageNum}
+                                        defaultValue={1}
                                         addonBefore="Page"
                                         style={{ width: 130 }}
                                         size="small"
@@ -482,6 +615,8 @@ const App: React.FC = () => {
                                 <div style={{ fontFamily: font }}>
                                     奇数最後のページ:&emsp;
                                     <InputNumber
+                                        onChange={isClickLastOddPageNum}
+                                        defaultValue={3}
                                         addonBefore="Page"
                                         style={{ width: 130 }}
                                         size="small"
@@ -597,6 +732,7 @@ const App: React.FC = () => {
                                         }
                                     />
                                 </div>
+                                <br />
                                 <div style={{ fontFamily: font }}>
                                     適応する画質を選択
                                     <br />
@@ -623,7 +759,7 @@ const App: React.FC = () => {
                                     クラウド設定
                                 </Divider>
                                 <Turnstile
-                                    siteKey="0x4AAAAAAAyOcPSn8fQAdRff"
+                                    siteKey="1x00000000000000000000AA"
                                     options={{
                                         theme: "light",
                                         size: "flexible",
@@ -708,5 +844,13 @@ export {
     isEnableOriginalImage,
     isEnableInsertHeader,
     headerText,
+    isEnableddFirstOddPageNum,
+    isEnabledInOrderPageNum,
+    isEnabledNonePageNum,
+    firstPageNum,
+    increasePageNum,
+    firstOddPageNum,
+    lastOddPageNum,
+    turnstileToken,
 };
 export default App;

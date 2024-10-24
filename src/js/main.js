@@ -5,6 +5,14 @@ import {
     isEnableOriginalImage,
     isEnableInsertHeader,
     headerText,
+    isEnableddFirstOddPageNum,
+    isEnabledInOrderPageNum,
+    isEnabledNonePageNum,
+    firstPageNum,
+    increasePageNum,
+    firstOddPageNum,
+    lastOddPageNum,
+    turnstileToken,
 } from "../App.tsx";
 
 //クラウド
@@ -33,7 +41,7 @@ let ImageProcessCanvasContext = ImageProcessCanvas.getContext("2d");
 
 // 画像ヘッダ
 const ImageHeaderHeight = 60;
-let ImageHeaderPageCount = 71;
+let nowImageHeaderPageCount = null;
 
 createFileData();
 
@@ -93,7 +101,6 @@ function streamVideo(deviceId) {
 }
 
 function confirmStreamVideo() {
-    console.log(isEnableInsertHeader);
     ImageProcessCanvasContext.drawImage(
         imgPrevVideoElem,
         0,
@@ -114,6 +121,10 @@ function confirmStreamVideo() {
     FinalOutputImages.push(imgConfirmed.src);
 }
 
+function deleteOnePageImage() {
+    FinalOutputImages.pop();
+}
+
 function insertImageHeader() {
     // document.fonts.add(ImageHeaderTextFont);
     ImageProcessCanvasContext.fillStyle = "white";
@@ -126,8 +137,9 @@ function insertImageHeader() {
 
     ImageProcessCanvasContext.fillStyle = "black";
     ImageProcessCanvasContext.font = "40px sans-serif";
+    decideImageHeaderPageCount();
     ImageProcessCanvasContext.fillText(
-        headerText + "     P." + ImageHeaderPageCount,
+        headerText + "     P." + nowImageHeaderPageCount,
         20,
         ImageHeaderHeight * 0.7,
     );
@@ -188,6 +200,29 @@ function insertImageHeader() {
             );
         },
     );
+}
+
+function decideImageHeaderPageCount() {
+    if (isEnabledInOrderPageNum) {
+        if (nowImageHeaderPageCount === null) {
+            nowImageHeaderPageCount = firstPageNum;
+        } //初回
+        else {
+            nowImageHeaderPageCount = increasePageNum + nowImageHeaderPageCount;
+        }
+    } else if (isEnableddFirstOddPageNum) {
+        if (nowImageHeaderPageCount === null) {
+            nowImageHeaderPageCount = firstOddPageNum;
+        } //初回
+        else if (lastOddPageNum === nowImageHeaderPageCount) {
+            nowImageHeaderPageCount = firstOddPageNum + 1;
+        } else {
+            nowImageHeaderPageCount = 2 + nowImageHeaderPageCount;
+        }
+    } else {
+        nowImageHeaderPageCount = "";
+    }
+    console.log(nowImageHeaderPageCount);
 }
 
 function createFileData() {
@@ -255,7 +290,12 @@ async function takeImageConfirmAndEnd(
 }
 
 function uploadFile(pdfData) {
+    if (!turnstileToken) {
+        console.log("Turnstileが未解決です");
+        return;
+    }
     const formData = new FormData();
+    formData.append("token", turnstileToken);
     formData.append(
         "file",
         new Blob([pdfData], {
@@ -288,4 +328,5 @@ export {
     confirmStreamVideo,
     takeImageConfirmAndEnd,
     getCameraData,
+    deleteOnePageImage,
 };
