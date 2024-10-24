@@ -759,7 +759,7 @@ const App: React.FC = () => {
                                     クラウド設定
                                 </Divider>
                                 <Turnstile
-                                    siteKey="1x00000000000000000000AA"
+                                    siteKey="0x4AAAAAAAyOcPSn8fQAdRff"
                                     options={{
                                         theme: "light",
                                         size: "flexible",
