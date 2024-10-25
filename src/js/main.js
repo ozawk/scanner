@@ -16,7 +16,7 @@ import {
 } from "../App.tsx";
 
 //クラウド
-const pdfViewerUrl = "viewer.scan.ozwk.net/";
+const pdfViewerUrl = "https://viewer.scan.ozwk.net/";
 const pdfSaverUrl = "https://viewer.scan.ozwk.net/save/";
 let fileId = "";
 let fileIdLength = 8;
