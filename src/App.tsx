@@ -1,4 +1,6 @@
 import React, { useState, useEffect, SetStateAction } from "react";
+import { useLocation } from "react-router-dom";
+import * as Sentry from "@sentry/react";
 import { Turnstile } from "@marsidev/react-turnstile";
 import type { TurnstileInstance } from "@marsidev/react-turnstile";
 import {
@@ -38,6 +40,21 @@ import { signInWithGoogle, genJwtCode } from "./js/auth";
 import { CheckboxChangeEvent } from "antd/es/checkbox";
 import { isVisible } from "@testing-library/user-event/dist/utils";
 
+Sentry.init({
+    dsn: "https://f1aa635fb077bb1b99cc503ba6c7206b@o4508195491348480.ingest.us.sentry.io/4508195510419456",
+    integrations: [
+        Sentry.browserTracingIntegration(),
+        Sentry.replayIntegration(),
+    ],
+    // Tracing
+    tracesSampleRate: 1.0, //  Capture 100% of the transactions
+    // Set 'tracePropagationTargets' to control for which URLs distributed tracing should be enabled
+    tracePropagationTargets: ["localhost", "https://scan.ozwk.net/"],
+    // Session Replay
+    replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
+    replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
+});
+
 const { Header, Content } = Layout;
 const font = "IBM Plex Sans JP";
 let firstGetCameraDataReroadButtonCont = 0;
@@ -61,6 +78,8 @@ let headerText = "scannedPDF";
 let isDownloadPdf = true,
     isUploadCloud = true,
     downloadPdfFileName = "scanned";
+let turnstileSiteKey = "1x00000000000000000000AA";
+//all pass 1x00000000000000000000AA
 
 const App: React.FC = () => {
     const ref = React.useRef<TurnstileInstance | null>(null);
@@ -759,7 +778,7 @@ const App: React.FC = () => {
                                     クラウド設定
                                 </Divider>
                                 <Turnstile
-                                    siteKey="0x4AAAAAAAyOcPSn8fQAdRff"
+                                    siteKey={turnstileSiteKey}
                                     options={{
                                         theme: "light",
                                         size: "flexible",

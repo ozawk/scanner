@@ -104,7 +104,7 @@ function confirmStreamVideo() {
     ImageProcessCanvasContext.drawImage(
         imgPrevVideoElem,
         0,
-        0,
+        ImageHeaderHeight,
         OutputVideoImageWidth,
         OutputVideoImageHeight,
     );
@@ -118,7 +118,20 @@ function confirmStreamVideo() {
     const dataURL = ImageProcessCanvas.toDataURL("image/jpeg");
     const imgConfirmed = document.getElementById("imgConfirmed");
     imgConfirmed.src = dataURL;
-    FinalOutputImages.push(imgConfirmed.src);
+    if (isEnableddFirstOddPageNum === false) {
+        FinalOutputImages.push(imgConfirmed.src);
+    } else {
+        if (nowImageHeaderPageCount % 2) {
+            FinalOutputImages.push(imgConfirmed.src);
+        } else {
+            Array.prototype.splice.apply(
+                FinalOutputImages,
+                [nowImageHeaderPageCount - firstOddPageNum, 0].concat(
+                    imgConfirmed.src,
+                ),
+            );
+        }
+    }
 }
 
 function deleteOnePageImage() {
@@ -222,7 +235,6 @@ function decideImageHeaderPageCount() {
     } else {
         nowImageHeaderPageCount = "";
     }
-    console.log(nowImageHeaderPageCount);
 }
 
 function createFileData() {
