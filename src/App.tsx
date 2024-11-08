@@ -78,7 +78,7 @@ let headerText = "scannedPDF";
 let isDownloadPdf = true,
     isUploadCloud = true,
     downloadPdfFileName = "scanned";
-let turnstileSiteKey = "1x00000000000000000000AA";
+let turnstileSiteKey = "0x4AAAAAAAyOcPSn8fQAdRff";
 //all pass 1x00000000000000000000AA
 
 const App: React.FC = () => {
